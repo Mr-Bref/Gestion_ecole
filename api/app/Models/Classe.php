@@ -26,6 +26,7 @@ class Classe extends Model
 
     public function eleves()
     {
-        return $this->belongsToMany(Eleve::class, 'eleve_classe','eleve_id','classe_id');
+        return $this->belongsToMany(Eleve::class, 'eleve_classe', 'classe_id', 'eleve_id');
     }
+    
 }

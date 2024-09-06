@@ -1,14 +1,12 @@
-import { ChevronRight, Slash, SlashIcon, SlashSquareIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { LinkSlashIcon } from "@heroicons/react/24/solid";
 export interface Breadcumb {
   text: string
   link: string
@@ -18,7 +16,7 @@ export default function PageHeader({ breadcumb }: { breadcumb: Breadcumb[] }) {
 
   return (
 
-    <Breadcrumb >
+    <Breadcrumb className="pb-6" >
       <BreadcrumbList>
         {
           breadcumb.map((item, index) => {

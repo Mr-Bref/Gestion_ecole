@@ -94,7 +94,7 @@ export default function SideNav() {
                     <div className="flex gap-2 items-center"><Settings /> <span>Parametre</span></div>
                 </div>
             </div>
-            <div className="p-6 bg-gray-200 w-full sm:max-h-screen overflow-y-auto">
+            <div className="p-6 bg-secondary w-full sm:max-h-screen overflow-y-auto">
                 <Outlet />
             </div>
         </div>

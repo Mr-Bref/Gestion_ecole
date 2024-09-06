@@ -1,0 +1,50 @@
+<?php
+
+return [
+    'required' => 'Le champ :attribute est requis.',
+    'nullable' => 'Le champ :attribute peut être nul.',
+    'boolean' => 'Le champ :attribute doit être vrai ou faux.',
+    'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
+    'date' => 'Le champ :attribute doit être une date valide.',
+    'integer' => 'Le champ :attribute doit être un nombre entier.',
+    'numeric' => 'Le champ :attribute doit être un nombre.',
+    'string' => 'Le champ :attribute doit être une chaîne de caractères.',
+    'array' => 'Le champ :attribute doit être un tableau.',
+    'max' => [
+        'string' => 'Le champ :attribute ne peut pas dépasser :max caractères.',
+        'file' => 'Le fichier :attribute ne peut pas dépasser :max Ko.',
+    ],
+    'min' => [
+        'string' => 'Le champ :attribute doit comporter au moins :min caractères.',
+    ],
+    'between' => [
+        'string' => 'Le champ :attribute doit comporter entre :min et :max caractères.',
+        'numeric' => 'Le champ :attribute doit être compris entre :min et :max.',
+    ],
+    'alpha' => 'Le champ :attribute ne peut contenir que des lettres.',
+    'alpha_dash' => 'Le champ :attribute ne peut contenir que des lettres, des chiffres, des tirets et des underscores.',
+    'alpha_num' => 'Le champ :attribute ne peut contenir que des lettres et des chiffres.',
+    'regex' => 'Le format du champ :attribute est invalide.',
+    'digits' => 'Le champ :attribute doit comporter :digits chiffres.',
+    'digits_between' => 'Le champ :attribute doit comporter entre :min et :max chiffres.',
+    'gt' => [
+        'numeric' => 'Le champ :attribute doit être supérieur à :value.',
+    ],
+    'lt' => [
+        'numeric' => 'Le champ :attribute doit être inférieur à :value.',
+    ],
+    'after' => 'Le champ :attribute doit être une date postérieure à :date.',
+    'before' => 'Le champ :attribute doit être une date antérieure à :date.',
+    'date_format' => 'Le champ :attribute ne correspond pas au format :format.',
+    'mimes' => 'Le champ :attribute doit être un fichier de type :values.',
+    'mimetypes' => 'Le champ :attribute doit être un fichier de type :values.',
+    'file' => 'Le champ :attribute doit être un fichier.',
+    'image' => 'Le champ :attribute doit être une image.',
+    'unique' => 'Le champ :attribute est déjà utilisé.',
+    'exists' => 'Le champ :attribute sélectionné n\'est pas valide.',
+    'required_with' => 'Le champ :attribute est requis lorsque :values est présent.',
+    'required_without' => 'Le champ :attribute est requis lorsque :values est absent.',
+    'same' => 'Le champ :attribute et :other doivent correspondre.',
+    'different' => 'Le champ :attribute doit être différent de :other.',
+    'in' => 'Le champ :attribute sélectionné est invalide.',
+];

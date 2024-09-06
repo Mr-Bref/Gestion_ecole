@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Annee_scolaire;
 use App\Models\Classe;
+use App\Models\Niveau;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\DB;
 
@@ -18,23 +19,36 @@ class ClasseFactory extends Factory
      */
     public function definition(): array
     {
-        // Get a random niveau
-        $niveauId = DB::table('niveaux')->inRandomOrder()->value('id');
-        $niveauLibelle = DB::table('niveaux')->where('id', $niveauId)->value('libelle');
+        // Récupère un niveau aléatoire
+        $niveau = Niveau::inRandomOrder()->first();
+        $niveauId = $niveau->id;
+        $niveauLibelle = $niveau->libelle;
 
-        // Determine the next letter
-        $lastLetter = DB::table('classes')
-            ->where('niveau_id', $niveauId)
+        // Récupère la dernière classe pour ce niveau
+        $lastClass = Classe::where('niveau_id', $niveauId)
             ->orderBy('nom', 'desc')
-            ->value('nom');
-        $lastLetter = preg_match('/[A-Z]$/', $lastLetter, $matches) ? $matches[0] : '';
-        $nextLetter = $lastLetter === '' ? 'A' : chr(ord($lastLetter) + 1);
+            ->first();
+
+        // Détermine la prochaine lettre
+        if ($lastClass) {
+            $lastLetter = preg_match('/[A-Z]$/', $lastClass->nom, $matches) ? $matches[0] : '';
+            $nextLetter = chr(ord($lastLetter) + 1);
+        } else {
+            $nextLetter = 'A';
+        }
+
+        $nom = $niveauLibelle . $nextLetter;
+
+        // Vérifie si le nom existe déjà, et passe à la lettre suivante si nécessaire
+        while (Classe::where('nom', $nom)->exists()) {
+            $nextLetter = chr(ord($nextLetter) + 1);
+            $nom = $niveauLibelle . $nextLetter;
+        }
 
         return [
-            'nom' => $niveauLibelle . $nextLetter,
-            'effectif' => $this->faker->numberBetween(20, 40),
+            'nom' => $nom,
             'niveau_id' => $niveauId,
-            'annee_scolaire_id'=>Annee_scolaire::inRandomOrder()->first()->id,
+            'annee_scolaire_id' => Annee_scolaire::inRandomOrder()->first()->id,
         ];
     }
 }

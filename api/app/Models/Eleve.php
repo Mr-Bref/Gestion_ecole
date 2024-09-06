@@ -28,6 +28,13 @@ class Eleve extends Model
     }
     public function classes()
     {
-        return $this->belongsToMany(Classe::class, 'eleve_classe','classe_id','eleve_id');
+        return $this->belongsToMany(Classe::class, 'eleve_classe', 'eleve_id', 'classe_id');
+
     }
+
+    public function tuteurs(){
+
+        return $this->belongsToMany(Tuteur::class, 'eleve_tuteur', 'eleve_id', 'tuteur_id');
+    }
+
 }

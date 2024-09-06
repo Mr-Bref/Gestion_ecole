@@ -13,7 +13,7 @@ class EnseignantSeeder extends Seeder
      */
     public function run(): void
     {
-        Enseignant::factory()->count(6)->create();
+        Enseignant::factory()->count(20)->create();
         
     }
 }

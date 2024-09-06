@@ -15,11 +15,9 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->string('matricule');
-            $table->integer('edu_master');
+            $table->integer('edu_master')->nullable();
             $table->date('date_naissance');
             $table->string('lieu_naissance');
-            $table->unsignedBigInteger('tuteur_id')->nullable();
-            $table->unsignedBigInteger('classe_id')->nullable();
             $table->timestamps();
         });
     }

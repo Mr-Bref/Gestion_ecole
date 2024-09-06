@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('classes', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('nom');
-            $table->unsignedBigInteger('niveau_id');
-            $table->unsignedBigInteger('annee_scolaire_id');
+        Schema::create('eleve_tuteur', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('eleve_id')->nullable();
+            $table->unsignedBigInteger('tuteur_id')->nullable();
+            $table->unique(['eleve_id', 'tuteur_id']);
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('classes');
+        Schema::dropIfExists('eleve_tuteur');
     }
 };

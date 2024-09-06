@@ -1,8 +1,8 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Eleve;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,68 +13,86 @@ class EleveController extends Controller
      */
     public function index()
     {
-        $eleves = Eleve::all();
+        $eleves = Eleve::with('users')->get();
 
-        return view('eleve', [
-            'eleves' => $eleves,
-        ]);
+        return response()->json($eleves);
     }
-
-   
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'matricule' => 'required',
-            'edumaster' => 'required',
-            'nom' => 'required',
-            'prenom' => 'required',
-            'sexe' => 'required',
-            'date_naissance' => 'required|date',
-            'lieu_naissance' => 'required',
-            'adresse' => 'required',
-            'statut' => 'required',
-            'classe_id' => 'required|exists:classes,id',
-            'tuteur_id' => 'required|exists:tuteurs,id',
-            'photo' => 'nullable|image',
-        ]);
+{
+    $request->validate([
+        'edumaster' => 'nullable',
+        'date_naissance' => 'required|date',
+        'lieu_naissance' => 'required',
+        'classe_id' => 'required|exists:classes,id',
+        'tuteur_id' => 'nullable|exists:tuteurs,id', // optional
+        'photo' => 'nullable|image', // optional
+        'nom' => 'required',
+        'prenom' => 'required',
+        'sexe' => 'required',
+        'adresse' => 'required',
+        'email' => 'nullable|email', // optional
+        'telephone' => 'nullable', // optional
+    ]);
 
-        $path_photo = Storage::putFile('public/photos', $request->photo);
-        $path_photo_convert_to_table = explode('/', $path_photo);
-        if ($request->has('photo')) {
-            $path_photo = Storage::putFile('public/photos', $request->photo);
-            $path_photo_convert_to_table = explode('/', $path_photo);
-        }
+    // Generate unique matricule
+    do {
+        $matricule = 'MAT-' . str_pad(rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
+    } while (Eleve::where('matricule', $matricule)->exists());
 
-        $eleve = Eleve::create([
-            'matricule' => $request->matricule,
-            'edumaster' => $request->edumaster,
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'sexe' => $request->sexe,
-            'date_naissance' => $request->date_naissance,
-            'lieu_naissance' => $request->lieu_naissance,
-            'adresse' => $request->adresse,
-            'statut' => $request->statut,
-            'photo' => $path_photo_convert_to_table ? $path_photo_convert_to_table[2] : null,
-            'classe_id' => $request->classe_id,
-            'tuteur_id' => $request->tuteur_id,
-        ]);
+    // Create user
+    $user = User::create([
+        'nom' => $request->nom,
+        'prenom' => $request->prenom,
+        'sexe' => $request->sexe,
+        'telephone' => $request->telephone ?? null,
+        'adresse' => $request->adresse,
+        'email' => $request->email ?? null,
+        'user_name' => $matricule.'_'.substr($request->nom, 0, 2),
+        'password' => bcrypt('defaultpassword'), // Handle password securely
+        'photo' => $path_photo ?? null,
+    ]);
 
-        return response()->json(['success', 'Compte éleve créé avec succès'], 201);
+    // Handle photo
+    $path_photo = null;
+    if ($request->hasFile('photo')) {
+        $path_photo = Storage::putFile('public/photos', $request->file('photo'));
+        $path_photo = explode('/', $path_photo)[2];
     }
+
+    // Create eleve
+    $eleve = Eleve::create([
+        'user_id' => $user->id,
+        'matricule' => $matricule,
+        'edu_master' => $request->edumaster,
+        'date_naissance' => $request->date_naissance,
+        'lieu_naissance' => $request->lieu_naissance,
+        
+    ]);
+
+    // Add classe to eleve
+    $eleve->classes()->attach($request->classe_id);
+    //Add tuteur to eleve
+    if ($request->tuteur_id) {
+        $eleve->tuteurs()->attach($request->tuteur_id);
+    }
+
+    return response()->json(['success' => 'Compte élève créé avec succès'], 201);
+}
+
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $user = Eleve::findOrFail($id);
+        $eleve = Eleve::with('users')->findOrFail($id);
+
+        return response()->json($eleve);
     }
-    
 
     /**
      * Update the specified resource in storage.
@@ -82,43 +100,56 @@ class EleveController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'matricule' => 'required',
-            'edumaster' => 'required',
+            'edumaster' => 'nullable',
+            'date_naissance' => 'required|date',
+            'lieu_naissance' => 'required',
+            'classe_id' => 'required|exists:classes,id',
+            'tuteur_id' => 'nullable|exists:tuteurs,id', // optional
+            'photo' => 'nullable', // optional
             'nom' => 'required',
             'prenom' => 'required',
             'sexe' => 'required',
-            'date_naissance' => 'required|date',
-            'lieu_naissance' => 'required',
             'adresse' => 'required',
-            'statut' => 'required',
-            'classe_id' => 'required|exists:classes,id',
-            'tuteur_id' => 'required|exists:tuteurs,id',
-            'photo' => 'nullable|image',
+            'email' => 'nullable|email', // optional
+            'telephone' => 'nullable', // optional
         ]);
 
-        if ($request->has('photo')) {
-            $path_photo = Storage::putFile('public/photos', $request->photo);
-            $path_photo_convert_to_table = explode('/', $path_photo);
+
+        $eleve = Eleve::with('users')->findOrFail($id);
+
+
+        // Update user
+        $user = $eleve->users;
+        $user->update([
+            'nom' => $request->nom,
+            'prenom' => $request->prenom,
+            'sexe' => $request->sexe,
+            'telephone' => $request->telephone ?? $user->telephone,
+            'adresse' => $request->adresse,
+        ]);
+
+
+            
+        if ($request->email !== $user->email) {
+            $user->update([
+                'email' => $request->email ?? $user->email
+            ]);
         }
 
-        $eleve = Eleve::where('id', (int) $id)->first();
-        $eleve->matricule = $request->nom;
-        $eleve->edumaster = $request->edumaster;
-        $eleve->nom = $request->nom;
-        $eleve->prenom = $request->prenom;
-        $eleve->sexe = $request->sexe;
-        $eleve->date_naissance = $request->date_naissance;
-        $eleve->lieu_naissance = $request->lieu_naissance;
-        $eleve->adresse = $request->adresse;
-        $eleve->statut = $request->statut;
-        $eleve->classe_id = $request->classe_id;
-        $eleve->tuteur_id = $request->tuteur_id;
-        $eleve->photo = $request->photo ? $request->photo : null;
+        // Handle photo update
+        if ($request->hasFile('photo')) {
+            $path_photo = Storage::putFile('public/photos', $request->file('photo'));
+            $eleve->photo = explode('/', $path_photo)[2];
+        }
 
-        $eleve->save();
+        // Update eleve
+        $eleve->update([
+            'matricule' => $request->matricule ?? $eleve->matricule,
+            'edu_master' => $request->edumaster ?? $eleve->edumaster,
+            'date_naissance' => $request->date_naissance,
+            'lieu_naissance' => $request->lieu_naissance,
+        ]);
 
-        return response()->json('Modification effectué avec succès');
+        return response()->json(['user'=>$user,"message"=>'Modification effectuée avec succès']);
     }
-
-
 }
