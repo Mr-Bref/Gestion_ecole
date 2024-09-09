@@ -97,7 +97,7 @@ export default function ClasseInfo() {
         url: `/eleves`,
         data: formDataToSend
       });
-    window.location.reload()
+      window.location.reload()
       console.log('Form submission successful:', response.data);
       setOpen(false);
     } catch (error) {
@@ -106,27 +106,21 @@ export default function ClasseInfo() {
   };
   async function updateRow(formData: FormData): Promise<any> {
     formData.append('classe_id', classeId as string);
-    try {
-      const response = await apiClient.request({
-        method: 'PUT',
-        url: `/eleves/${formData.get('user_id')}` as string, 
-        data: formData
+    formData.append('_method', 'put');
+    try { 
+      const response = await apiClient.post(`/eleves/${formData.get('user_id')}`,formData,{
+        headers:{
+          "Content-Type":"multipart/form-data"
+        }
       });
-    
+
       console.log('Form submission successful:', response.data);
     } catch (error) {
       console.error('Form submission failed:', error);
     }
   }
-  
-  // In Parent Component
-  <DataTable
-    columns={columns}
-    data={data}
-    endpoint="eleves"
-    updateRow={updateRow}  // Pass the function
-  />
-  
+
+
 
   return (
     <div className='flex item-center flex-col h-full'>
@@ -148,11 +142,11 @@ export default function ClasseInfo() {
             <DialogHeader>
               <DialogTitle>Inscription</DialogTitle>
             </DialogHeader>
-            <form 
+            <form
               className="space-y-4"
               onSubmit={(e) => handleSubmit(e, formData, submitForm)} // Use the reusable handleSubmit function
             >
-               <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <div className="grid flex-1 gap-2">
                   <Label htmlFor="nom">Nom</Label>
                   <Input
@@ -237,14 +231,18 @@ export default function ClasseInfo() {
                 <Button variant="default" type="submit" className="flex mb-4">
                   <span className="lg:block">Valider</span>
                 </Button>
-                <Button variant="outline" className="mb-4 hidden lg:block" onClick={()=>setOpen(false)}>
+                <Button variant="outline" className="mb-4 hidden lg:block" onClick={() => setOpen(false)}>
                   <span>Annuler</span>
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
-        <DataTable columns={columns} data={data} endpoint='eleves' updateRow={updateRow} />
+        <DataTable
+          columns={columns}
+          data={data}
+          endpoint='eleves'
+          updateRow={updateRow} />
       </div>
     </div>
   );

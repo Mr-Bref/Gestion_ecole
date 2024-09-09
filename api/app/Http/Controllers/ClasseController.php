@@ -6,6 +6,7 @@ use App\Models\Classe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class ClasseController extends Controller
 {
@@ -82,7 +83,7 @@ class ClasseController extends Controller
                 $eleve->sexe = $eleve->users->sexe;
                 $eleve->statut = $eleve->users->statut;
                 $eleve->verified = $eleve->users->verified;
-                $eleve->photo = $eleve->users->photo;
+                $eleve->photo = Storage::url($eleve->users->photo);
                 $eleve->adresse = $eleve->users->adresse;
                 unset($eleve->users); // Remove the nested 'user' object
             }

@@ -39,8 +39,9 @@ import { Button } from "@/components/ui/button"
 import axios from "axios"
 import { handleValidation } from "@/lib/otherHandlers"
 import apiClient from "@/config"
+import { Label } from "../ui/label"
 
-type UpdateRowFn = ( newData: FormData) => Promise<any>;
+type UpdateRowFn = (newData: FormData) => Promise<any>;
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -68,11 +69,25 @@ export function DataTable<TData, TValue>({
   const [hasChanges, setHasChanges] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [globalFilter, setGlobalFilter] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Correctly set the newDialogData with the photo file
+      //@ts-ignore
+      setNewDialogData((prevData) => ({
+        ...prevData,
+        photo: file,  // Assign the File object
+      }));
+      setImagePreview(URL.createObjectURL(file));  // Preview the selected image
+    }
+  };
 
   function handleSave() {
     if (dialogData && newDialogData) {
       setIsLoading(true);
-      
+
       // Create FormData from newDialogData
       const formData = new FormData();
       for (const key in newDialogData) {
@@ -80,11 +95,18 @@ export function DataTable<TData, TValue>({
           formData.append(key, newDialogData[key] as any);
         }
       }
-  
+      let dialogphoto = newDialogData?.photo as File
+      if (dialogphoto) {
+        formData.set('photo',dialogphoto )
+        console.log(newDialogData.photo)
+      }
+      
+      
+
       updateRow(formData)  // Call the passed function
         .then(() => {
           console.log('Update successful');
-        //  window.location.reload()
+          //  window.location.reload()
 
         })
         .catch((error) => {
@@ -93,12 +115,13 @@ export function DataTable<TData, TValue>({
         .finally(() => {
           setIsLoading(false);
           setOpenDialogue(false);
-
+          setImagePreview(null);
         });
     }
   }
-  
+
   function handleCancel() {
+    setImagePreview(null)
     setOpenDialogue(false)
   }
   function compareData(): boolean {
@@ -187,7 +210,7 @@ export function DataTable<TData, TValue>({
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="outline" className="bg-primary mx-2"
-              disabled={table.getFilteredSelectedRowModel().rows.every(row => row.original.verified  === 0) === false
+              disabled={table.getFilteredSelectedRowModel().rows.every(row => row.original.verified === 0) === false
                 || table.getFilteredSelectedRowModel().rows.length === 0} onClick={e => {
                   // @ts-ignore
                   handleValidation(e, table.getFilteredSelectedRowModel().rows.map(row => parseInt(row.original.user_id)), 'users/toggle-verification')
@@ -251,83 +274,120 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-end space-x-2 py-4">
         <DataTablePagination table={table} />
       </div>
-     <Dialog open={opendialogue} onOpenChange={setOpenDialogue}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Information</DialogTitle>
-    </DialogHeader>
+      <Dialog open={opendialogue} onOpenChange={setOpenDialogue}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Information</DialogTitle>
+          </DialogHeader>
 
-    <form
-      onSubmit={(e) => {
-        e.preventDefault(); // Prevent default form submission
-        handleSave(); // Call your save function
-      }}
-      
-    >
-      <DialogDescription className="max-h-[600px] overflow-y-auto px-4">
-        {/* Priority Fields First */}
-        {dialogData && ["photo","nom", "prenom", "matricule", "sexe","adresse"].map((field) => (
-          // @ts-ignore
-          dialogData[field] as string !== undefined ? (
-            <div key={field} className="text-md py-2">
-              <label htmlFor={field} className="uppercase font-semibold">
-                {field}:
-              </label>
-              <Input
-              
-                id={field}
-                // @ts-ignore
-                defaultValue={dialogData[field] as string}
-                className="my-1"
-                onChange={(e) =>
-                  setNewDialogData({
-                    ...newDialogData as TData,
-                    [field]: e.target.value,
-                  })
-                }
-              />
-            </div>
-          ) : null
-        ))}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault(); // Prevent default form submission
+              handleSave(); // Call your save function
+            }}
+          >
+            <div className="max-h-[600px] overflow-y-auto px-4">
+              {/* Priority Fields First */}
+              {dialogData &&
+                ["photo", "nom", "prenom", "matricule", "sexe", "adresse"].map((field) => {
+                  // @ts-ignore
+                  const fieldValue = dialogData[field];
 
-        {/* Other Fields */}
-        {dialogData &&
-          Object.entries(dialogData)
-            .filter(([key]) => !["nom", "prenom", "matricule", "sexe", "user_id", "id", "adresse"].includes(key))
-            .map(([key, value]) => (
-              <div key={key} className="text-md py-2">
-                <label htmlFor={key} className="uppercase font-semibold">
-                  {key}:
-                </label>
-                <Input
-                  id={key}
-                  defaultValue={value as string}
-                  className="my-1"
-                  onChange={(e) =>
-                    setNewDialogData({
-                      ...newDialogData as TData,
-                      [key]: e.target.value,
-                    })
+                  if (fieldValue !== undefined) {
+                    if (field === "photo") {
+
+                      return (
+                        <div key={field} className="border border-black">
+                          {/* Image upload logic with preview */}
+                          <label htmlFor="photo">
+                            {imagePreview ? (
+                              <img src={imagePreview} alt="Image preview" className="w-32 h-32 object-cover" />
+                            ) : (
+                              <img src={fieldValue} alt="Placeholder" className="w-32 h-32 object-cover" />
+                            )}
+                          </label>
+                          <Input
+                            type="file"
+                            name="photo"
+                            accept="image/*"
+                            onChange={handleImageChange} // Handle file selection
+                          />
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div key={field} className="text-md py-1">
+                          <Label htmlFor={field} className="capitalize font-semibold">
+                            {field}:
+                          </Label>
+                          <Input
+                            id={field}
+                            defaultValue={fieldValue as string}
+                            className="my-1"
+                            onChange={(e) =>
+                              //@ts-ignore
+                              setNewDialogData({
+                                ...newDialogData,
+                                [field]: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      );
+                    }
                   }
-                />
-              </div>
-            ))}
-      </DialogDescription>
+                  return null;
+                })}
 
-      <DialogFooter>
-        <Button
-          type="submit"
-          disabled={!hasChanges || isLoading}
-        >
-          Enregistrer
-        </Button>
-        <Button variant="ghost" onClick={handleCancel} type="button">
-          Annuler
-        </Button>
-      </DialogFooter>
-    </form>
-  </DialogContent>
-</Dialog>
+              {/* Other Fields */}
+              {dialogData &&
+                Object.entries(dialogData)
+                  .filter(
+                    ([key]) =>
+                      ![
+                        "nom",
+                        "prenom",
+                        "matricule",
+                        "sexe",
+                        "user_id",
+                        "id",
+                        "adresse",
+                        "photo",
+                      ].includes(key)
+                  )
+                  .map(([key, value]) => (
+                    <div key={key} className="text-md py-1">
+                      <Label htmlFor={key} className="capitalize font-semibold">
+                        {key}:
+                      </Label>
+                      <Input
+                        id={key}
+                        defaultValue={value as string}
+                        className="my-1"
+                        onChange={(e) =>
+                          //@ts-ignore
+                          setNewDialogData({
+                            ...newDialogData,
+                            [key]: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+            </div>
+
+            <DialogFooter>
+              <Button type="submit" disabled={!hasChanges || isLoading}>
+                Enregistrer
+              </Button>
+              <Button variant="ghost" onClick={handleCancel} type="button">
+                Annuler
+              </Button>
+            </DialogFooter>
+          </form>
+
+        </DialogContent>
+      </Dialog>
 
 
     </div>
